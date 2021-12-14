@@ -89,30 +89,30 @@ static public class AssignmentPart1
     static public void SavePartyButtonPressed()
     {
 
-        //StreamWriter sw = new StreamWriter(Application.dataPath + Path.DirectorySeparatorChar + "OurBelovedSaveFile.txt");
+        StreamWriter sw = new StreamWriter(Application.dataPath + Path.DirectorySeparatorChar + "OurBelovedSaveFile.txt");
 
-        //Debug.Log("start of loop");
+        Debug.Log("start of loop");
 
-        //foreach (PartyCharacter pc in GameContent.partyCharacters)
-        //{
+        foreach (PartyCharacter pc in GameContent.partyCharacters)
+        {
 
-        //    sw.WriteLine(PartyCharacterSaveDataSignifier + "," + pc.classID + "," + pc.health 
-        //    + "," + pc.mana + "," + pc.strength
-        //    + "," + pc.agility + "," + pc.wisdom);
+            sw.WriteLine(PartyCharacterSaveDataSignifier + "," + pc.classID + "," + pc.health 
+            + "," + pc.mana + "," + pc.strength
+            + "," + pc.agility + "," + pc.wisdom);
 
-        //    //pc.equipment
+            //pc.equipment
 
-        //    foreach(int equipID in pc.equipment)
-        //    {
-        //        sw.WriteLine(EquipmentSaveDataSignifier + "," + equipID);
-        //    }
+            foreach(int equipID in pc.equipment)
+            {
+                sw.WriteLine(EquipmentSaveDataSignifier + "," + equipID);
+            }
 
 
-        //}
+        }
 
-        //sw.Close();
+        sw.Close();
 
-        //Debug.Log("end of loop");
+        Debug.Log("end of loop");
     }
 
     static public void LoadPartyButtonPressed()
@@ -349,6 +349,70 @@ static public class AssignmentPart2
 
     }
 
+    static public void SendPartyDataToServer(NetworkedClient networkedClient)
+    {
+        const int PartyCharacterSaveDataSignifier = 0;
+        const int EquipmentSaveDataSignifier = 1;
+
+        LinkedList<string> data = new LinkedList<string>();
+
+        foreach (PartyCharacter pc in GameContent.partyCharacters)
+        {
+            data.AddLast(PartyCharacterSaveDataSignifier + "," + pc.classID + "," + pc.health
+            + "," + pc.mana + "," + pc.strength
+            + "," + pc.agility + "," + pc.wisdom);
+
+            foreach (int equipID in pc.equipment)
+            {
+                data.AddLast(EquipmentSaveDataSignifier + "," + equipID);
+            }
+        }
+
+        networkedClient.SendMessageToHost(ClientToServerSignifiers.PartyDataTransferStart + "");
+
+        foreach(string d in data)
+        {
+            networkedClient.SendMessageToHost(ClientToServerSignifiers.PartyDataTransfer + "" + d);
+        }
+
+        networkedClient.SendMessageToHost(ClientToServerSignifiers.PartyDataTransferEnd + "");
+    }
+
+    static public void LoadPartyFromReceivedData(LinkedList<string> data)
+    {
+        GameContent.partyCharacters.Clear();
+
+        const int PartyCharacterSaveDataSignifier = 0;
+        const int EquipmentSaveDataSignifier = 1;
+
+        foreach(string line in data)
+        {
+            string[] csv = line.Split(',');
+
+            // foreach (string i in csv)
+            //     Debug.Log(i);
+
+            // Debug.Log(line);
+
+            int saveDataSignifier = int.Parse(csv[1]);
+
+            if (saveDataSignifier == PartyCharacterSaveDataSignifier)
+            {
+                PartyCharacter pc = new PartyCharacter(int.Parse(csv[2]), int.Parse(csv[3]), int.Parse(csv[4]),
+                    int.Parse(csv[5]), int.Parse(csv[6]), int.Parse(csv[7]));
+
+                GameContent.partyCharacters.AddLast(pc);
+            }
+            else if (saveDataSignifier == EquipmentSaveDataSignifier)
+            {
+                GameContent.partyCharacters.Last.Value.equipment.AddLast(int.Parse(csv[2]));
+                //GameContent.partyCharacters.equipment.Last.Value.AddLast(int.Parse(csv[1]))
+            }
+        }
+
+        GameContent.RefreshUI();
+    }
+
 }
 
 #endregion
@@ -427,54 +491,6 @@ class PartySaveData
 
     }
 }
-
-
-
-//Task List!
-//Create a class to package a file name and an index
-//save party with dummy save file
-//load  party with dummy save file
-//Write PartyIndicesAndNames.txt
-//[file index],[party name]
-//declare the file name as a constant
-//open the file
-// write the index + "," + partyname.txt
-//Sequentially create a new index for each new party - 
-//when we create a new index, ++ our last used index counter
-//save/load our index last used counter
-//maintain a last used index (int)
-//save party with file name of given index
-
-
-
-//load  party with file name of given index
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//Also... what if there's two parties named the same thing?
-//what if party name has comma in it?
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #region old notes
 
